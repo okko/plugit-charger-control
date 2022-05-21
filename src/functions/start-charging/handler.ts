@@ -1,27 +1,25 @@
 import { formatJSONResponse } from '@libs/api-gateway'
 import { middyfy } from '@libs/lambda'
 
-import { Handler } from 'aws-lambda'
+import { APIGatewayProxyEventV2, Handler } from 'aws-lambda'
 import * as plugitClient from './plugitClient'
 import * as alexaMonkey from './alexaMonkey'
 
-interface RequestEvent {
-  apiKey: string
-}
-
-const handler: Handler<RequestEvent> = async (event) => {
-  if (event.apiKey !== 'hunter42') {
-    return {
-      statusCode: 403,
-      message: '{"error": "Forbidden"}',
+const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
+  if (event.queryStringParameters?.apiKey !== process.env.API_KEY) {
+    return { statusCode: 403, message: JSON.stringify({error: 'Forbidden'}),
+    }
+  }
+  if (event.rawPath !== '/') {
+    return { statusCode: 404, message: JSON.stringify({error: 'Not found'}),
     }
   }
 
-  plugitClient.login()
-  if (plugitClient.isCableConnected()) {
+  const plugitAccessToken = await plugitClient.login()
+  if (await plugitClient.isCableConnected(plugitAccessToken)) {
     plugitClient.startCharging()
   }
-  alexaMonkey.announce('The car is charging')
+  await alexaMonkey.announce('The car is charging, seriously')
   return formatJSONResponse({
     message: 'Done',
     event,
