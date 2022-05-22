@@ -33,15 +33,16 @@ const serverlessConfiguration: AWS = {
     },
   },
   functions: { startCharging },
-  package: { individually: true, },
+  package: {
+    individually: true,
+  },
   custom: {
     esbuild: {
-      external: ['chrome-aws-lambda', '@sparticuz/chrome-aws-lambda'],
       bundle: true,
       minify: false,
       sourcemap: true,
-      exclude: ['aws-sdk'],
-      target: 'node14',
+      exclude: ['aws-sdk', '@sparticuz/chrome-aws-lambda'],
+      target: 'node16',
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
