@@ -1,1 +1,1 @@
-export { default as startCharging } from './start-charging';
+export { default as startCharging } from './start-charging'

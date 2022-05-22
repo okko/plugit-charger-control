@@ -1,6 +1,6 @@
-import type { AWS } from '@serverless/typescript';
+import type { AWS } from '@serverless/typescript'
 
-import startCharging from '@functions/start-charging';
+import startCharging from '@functions/start-charging'
 
 const serverlessConfiguration: AWS = {
   service: 'plugit-charger-control',
@@ -57,4 +57,4 @@ const serverlessConfiguration: AWS = {
   },
 }
 
-module.exports = serverlessConfiguration;
+module.exports = serverlessConfiguration
