@@ -1,8 +1,7 @@
-import got from 'got';
+import got from 'got'
 import chromium from '@sparticuz/chrome-aws-lambda'
-// const chromium = require('@sparticuz/chrome-aws-lambda');
 
-// const start_transaction = 'https://plugitcloud.com/api/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction';
+const start_transaction = 'https://plugitcloud.com/api/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
 const chargebox_dashboard = 'https://plugitcloud.com/api/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_NUMBER + '/dashboard'
 
 export async function login() {
@@ -27,6 +26,8 @@ export async function login() {
   // await page.screenshot({ path: 'step2.png' })
   await page.click('button[type="submit"][aria-label="Log in"]')
   await page.waitForNavigation({waitUntil: 'networkidle2'})
+
+  // Bridge function to get data from the browser to us
   const params = await page.evaluate(() => {
       return {
         accessToken: window.localStorage.accessToken,
@@ -38,20 +39,45 @@ export async function login() {
   // await page.screenshot({ path: 'step3.png' })
   await browser.close()
   return params.accessToken
-  return 'dippa'
 }
 
-export async function isCableConnected(accessToken: string) {
+export async function getStatus(accessToken: string): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
   const result = await got(chargebox_dashboard, {
     headers: {
         'authorization': 'Bearer ' + accessToken,
         'accept': 'application/json, text/plain, */*',
-    }
+    },
   })
-  console.log(result)
-  return {statusCode: result.statusCode, body: result.body }
+  const statusCode = result.statusCode
+  if (statusCode != 200) {
+    console.error('Error in plugitClient:isCableconnected, statusCode != 200')
+    console.error(result)
+    return 'ERROR'
+  }
+  const body = JSON.parse(result.body)
+  console.log(body)
+  return body.chargeBoxes?.[0]?.status
 }
 
-export function startCharging() {
-  return true
+export async function startCharging(accessToken: string) {
+  const result = await got.post(start_transaction, {
+    headers: {
+      'authorization': 'Bearer ' + accessToken,
+      'accept': 'application/json, text/plain, */*',
+    },
+  })
+  const statusCode = result.statusCode
+  if (statusCode != 200) {
+    console.error('Error in plugitClient:startCharging, statusCode != 200')
+    console.error(result)
+    return false
+  }
+  const body = JSON.parse(result.body)
+  console.log('plugitClient:startCharging request got 200')
+  console.log(body)
+  if (body.status === 'Accepted') {
+    return true
+  } else {
+    return false
+  }
 }

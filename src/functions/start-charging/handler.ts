@@ -16,14 +16,19 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
   }
 
   const plugitAccessToken = await plugitClient.login()
-  if (await plugitClient.isCableConnected(plugitAccessToken)) {
-    plugitClient.startCharging()
+  const plugitStatus = await plugitClient.getStatus(plugitAccessToken)
+  if (plugitStatus === 'Available') {
+    await alexaMonkey.announce('Not charging, the cable is not connected')
+  } else if (plugitStatus === 'Preparing') {
+    await plugitClient.startCharging(plugitAccessToken)
+    await alexaMonkey.announce('The car is now charging')
+  } else {    
+    await alexaMonkey.announce('The charger status is ' + (plugitStatus === 'SuspendedEVSE' ? 'suspended by the Supply Equipment' : plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
-  await alexaMonkey.announce('The car is charging, seriously')
   return formatJSONResponse({
     message: 'Done',
     event,
   })
-};
+}
 
-export const main = middyfy(handler);
+export const main = middyfy(handler)
