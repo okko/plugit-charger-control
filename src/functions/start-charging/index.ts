@@ -7,4 +7,9 @@ export default {
     "Ref": "ChromeLambdaLayer",
   }],
   timeout: 300,
+  events: [
+    {
+      'schedule': 'cron(0 21 ? * MON-SUN *)',
+    }
+  ],
 }
