@@ -5,6 +5,7 @@ import startCharging from '@functions/start-charging'
 const serverlessConfiguration: AWS = {
   service: 'plugit-charger-control',
   frameworkVersion: '3',
+  // plugins: ['serverless-esbuild', 'serverless-local-schedule'],
   plugins: ['serverless-esbuild'],
   resources: {
     Description: 'Plugit Charger Control',
