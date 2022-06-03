@@ -17,7 +17,10 @@ export async function login() {
   const page = await browser.newPage()
   await page.goto('https://plugitcloud.com')
   // await page.screenshot({ path: 'step1.png' })
-  await page.click('button.loginPage__loginActionButton')
+  // document.querySelectorAll('button').forEach((a) => {if (a.textContent.includes('Login')) { console.log(a) }})
+  const [button] = await page.$x("//button[contains(., 'Login')]");
+  await button?.click()
+  // Page changes here to login.plugitcloud.com
   await page.waitForSelector('input[name="email"]', { visible: true })
   await page.focus('input[name="email"]')
   await page.keyboard.type(process.env.PLUGIT_USERNAME || '')
