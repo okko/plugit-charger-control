@@ -15,16 +15,6 @@ export async function login() {
   })
 
   const page = await browser.newPage()
-  // await page.goto('https://plugitcloud.com')
-  // const [cookieButton] = await page.$x("//button[contains(., 'Accept essentials')]");
-  // await cookieButton?.click()
-  // const [button] = await page.$x("//button[contains(., 'Login / Register')]")
-  // await Promise.all([
-  //   page.waitForNavigation(),
-  //   button?.click()
-  // ]);
-  //
-  // Page changes here to login.plugitcloud.com
   page.goto(plugitLogin)
   await page.waitForSelector('input[name="email"]', { visible: true })
   await page.focus('input[name="email"]')
@@ -42,7 +32,6 @@ export async function login() {
     }
   );
 
-
   await page.click('button[type="submit"][aria-label="Log in"]')
   await page.waitForNavigation({waitUntil: 'networkidle2'})
 
@@ -50,12 +39,7 @@ export async function login() {
   const params = await page.evaluate(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     return {
-        clientUrl: window.location.href,
         accessToken: hashParams.get('access_token'),
-        // accessToken: window.localStorage.accessToken,
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight,
-        deviceScaleFactor: window.devicePixelRatio,
       };
     })
   await browser.close()
