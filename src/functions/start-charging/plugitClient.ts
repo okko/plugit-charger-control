@@ -1,8 +1,9 @@
 import got from 'got'
 import chromium from '@sparticuz/chrome-aws-lambda'
 
-const start_transaction = 'https://plugitcloud.com/api/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
-const chargebox_dashboard = 'https://plugitcloud.com/api/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_NUMBER + '/dashboard'
+const startTransaction = 'https://plugitcloud.com/api/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
+const chargeboxDashboard = 'https://plugitcloud.com/api/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_NUMBER + '/dashboard'
+const plugitLogin = 'https://login.plugitcloud.com/authorize?client_id=k42exu3BFDixYFjROWlg6ycOigrJXHb7&protocol=oauth2&scope=openid&response_type=token&redirect_uri=https%3A%2F%2Fplugitcloud.com%2Fdashboard&audience=https%3A%2F%2Fcapi.plugitcloud.com'
 
 export async function login() {
   const browser = await chromium.puppeteer.launch({
@@ -13,39 +14,56 @@ export async function login() {
     ignoreHTTPSErrors: true,
   })
 
-  // const browser = await chromium.puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto('https://plugitcloud.com')
-  // await page.screenshot({ path: 'step1.png' })
-  // document.querySelectorAll('button').forEach((a) => {if (a.textContent.includes('Login')) { console.log(a) }})
-  const [button] = await page.$x("//button[contains(., 'Login')]");
-  await button?.click()
+  // await page.goto('https://plugitcloud.com')
+  // const [cookieButton] = await page.$x("//button[contains(., 'Accept essentials')]");
+  // await cookieButton?.click()
+  // const [button] = await page.$x("//button[contains(., 'Login / Register')]")
+  // await Promise.all([
+  //   page.waitForNavigation(),
+  //   button?.click()
+  // ]);
+  //
   // Page changes here to login.plugitcloud.com
+  page.goto(plugitLogin)
   await page.waitForSelector('input[name="email"]', { visible: true })
   await page.focus('input[name="email"]')
   await page.keyboard.type(process.env.PLUGIT_USERNAME || '')
   await page.focus('input[name="password"]')
   await page.keyboard.type(process.env.PLUGIT_PASSWORD || '')
-  // await page.screenshot({ path: 'step2.png' })
+
+  // Prevent https://plugitcloud.com/dashboard from evaluating the return URL hash so that we can capture access_token from it
+  await page.setRequestInterception(true);
+  page.on('request', interceptedRequest => {
+    if (interceptedRequest.url().endsWith('.js'))
+      interceptedRequest.abort();
+    else
+      interceptedRequest.continue();
+    }
+  );
+
+
   await page.click('button[type="submit"][aria-label="Log in"]')
   await page.waitForNavigation({waitUntil: 'networkidle2'})
 
   // Bridge function to get data from the browser to us
   const params = await page.evaluate(() => {
-      return {
-        accessToken: window.localStorage.accessToken,
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    return {
+        clientUrl: window.location.href,
+        accessToken: hashParams.get('access_token'),
+        // accessToken: window.localStorage.accessToken,
         width: document.documentElement.clientWidth,
         height: document.documentElement.clientHeight,
         deviceScaleFactor: window.devicePixelRatio,
       };
     })
-  // await page.screenshot({ path: 'step3.png' })
   await browser.close()
   return params.accessToken
 }
 
 export async function getStatus(accessToken: string): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
-  const result = await got(chargebox_dashboard, {
+  const result = await got(chargeboxDashboard, {
     headers: {
         'authorization': 'Bearer ' + accessToken,
         'accept': 'application/json, text/plain, */*',
@@ -63,7 +81,7 @@ export async function getStatus(accessToken: string): Promise<'Unavailable' | 'A
 }
 
 export async function startCharging(accessToken: string) {
-  const result = await got.post(start_transaction, {
+  const result = await got.post(startTransaction, {
     headers: {
       'authorization': 'Bearer ' + accessToken,
       'accept': 'application/json, text/plain, */*',
