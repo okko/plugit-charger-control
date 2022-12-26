@@ -65,11 +65,14 @@ export async function getStatus(accessToken: string): Promise<'Unavailable' | 'A
 }
 
 export async function startCharging(accessToken: string) {
+  const headers = {
+    'authorization': 'Bearer ' + accessToken,
+    'accept': 'application/json, text/plain, */*',
+  }
+  console.log({startTransaction, headers, accessToken})
   const result = await got.post(startTransaction, {
-    headers: {
-      'authorization': 'Bearer ' + accessToken,
-      'accept': 'application/json, text/plain, */*',
-    },
+    headers,
+    json: {},
   })
   const statusCode = result.statusCode
   if (statusCode != 200) {
