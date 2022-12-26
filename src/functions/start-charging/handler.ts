@@ -16,9 +16,15 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
     if (event.rawPath !== '/') {
       return { statusCode: 404, message: JSON.stringify({error: 'Not found'}), }  
     }
+  } else {
+    // Assume it's the developer running the Lambda by hand
   }
 
   const plugitAccessToken = await plugitClient.login()
+  if (!plugitAccessToken) {
+    console.log('Unable to get Plugit access token')
+    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get Plugit access token'}), }
+  }
   const plugitStatus = await plugitClient.getStatus(plugitAccessToken)
   if (plugitStatus === 'Available') {
     await alexaMonkey.announce('Not charging the car, the cable is not connected')
