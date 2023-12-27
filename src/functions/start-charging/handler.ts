@@ -17,7 +17,7 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
       return { statusCode: 404, message: JSON.stringify({error: 'Not found'}), }  
     }
   } else {
-    // Assume it's the developer running the Lambda by hand
+    // Assume it's the developer running the Lambda by hand locally or in the AWS Console
   }
 
   const plugitAccessToken = await plugitClient.login()
