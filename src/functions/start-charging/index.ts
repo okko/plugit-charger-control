@@ -8,6 +8,7 @@ export default {
   }],
   timeout: 300,
   events: [
+    // Without serverless-local-schedule:
     // {
     //   'schedule': 'cron(0 19 * 1-2,11-12 ? *)',
     // },

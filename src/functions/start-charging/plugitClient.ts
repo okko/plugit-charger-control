@@ -1,10 +1,11 @@
 import got from 'got'
 import chromium from '@sparticuz/chrome-aws-lambda'
 
-const startTransaction = 'https://plugitcloud.com/api/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
-const chargeboxDashboard = 'https://plugitcloud.com/api/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_NUMBER + '/dashboard'
-const plugitLogin = 'https://login.plugitcloud.com/authorize?client_id=k42exu3BFDixYFjROWlg6ycOigrJXHb7&protocol=oauth2&scope=openid&response_type=token&redirect_uri=https%3A%2F%2Fplugitcloud.com%2Fdashboard&audience=https%3A%2F%2Fcapi.plugitcloud.com'
+const startTransaction = 'https://app.plugitcloud.com/backend/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
+const chargeboxInfo =    'https://app.plugitcloud.com/backend/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID
 
+// Take the /authorize URL and replace "response_type=code&" with "response_type=token" in it
+const plugitLogin = 'https://login.plugitcloud.com/authorize?response_type=token&client_id=7QgIcJZwbxHRLfY0wQk188mWAPWbzwEp&redirect_uri=https://app.plugitcloud.com/backend/login/auth0/callback&scope=email%20openid%20profile%20offline_access%20&audience=https://capi.plugitcloud.com&state=d32b07545e38d1f329da8d8a18d9fa9e&ui_locales=en&environment=plugit'
 export async function login() {
   const browser = await chromium.puppeteer.launch({
     args: chromium.args,
@@ -22,7 +23,7 @@ export async function login() {
   await page.focus('input[name="password"]')
   await page.keyboard.type(process.env.PLUGIT_PASSWORD || '')
 
-  // Prevent https://plugitcloud.com/dashboard from evaluating the return URL hash so that we can capture access_token from it
+  // Prevent https://app.plugitcloud.com/ from evaluating the return URL hash so that we can capture access_token from it
   await page.setRequestInterception(true);
   page.on('request', interceptedRequest => {
     if (interceptedRequest.url().endsWith('.js'))
@@ -47,10 +48,17 @@ export async function login() {
 }
 
 export async function getStatus(accessToken: string): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
-  const result = await got(chargeboxDashboard, {
+  console.log('Access token: ' + accessToken)
+  console.error(chargeboxInfo)
+  const result = await got(chargeboxInfo, {
     headers: {
         'authorization': 'Bearer ' + accessToken,
         'accept': 'application/json, text/plain, */*',
+    },
+    hooks: {
+      beforeRequest: [function(options) {
+          console.log(options);
+      }]
     },
   })
   const statusCode = result.statusCode
@@ -69,10 +77,14 @@ export async function startCharging(accessToken: string) {
     'authorization': 'Bearer ' + accessToken,
     'accept': 'application/json, text/plain, */*',
   }
-  console.log({startTransaction, headers, accessToken})
   const result = await got.post(startTransaction, {
     headers,
     json: {},
+    hooks: {
+      beforeRequest: [function(options) {
+          console.log(options);
+      }]
+    },
   })
   const statusCode = result.statusCode
   if (statusCode != 200) {
