@@ -5,6 +5,7 @@
   "main": "serverless.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "run-local": "sls invoke local --function startCharging",
     "rebuild-chrome": "mkdir sparticuz-temp; cd sparticuz-temp; git clone --depth=1 https://github.com/sparticuz/chrome-aws-lambda.git; cd chrome-aws-lambda; make chrome_aws_lambda.zip; mv chrome_aws_lambda.zip ../../../; cd ../../../; rm -rf sparticuz-temp; echo 'Done.'"
   },
   "engines": {
