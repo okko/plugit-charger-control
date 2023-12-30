@@ -13,15 +13,6 @@ export async function login() {
   })
 
   const page = await browser.newPage()
-
-  // await page.setRequestInterception(true);
-  // page.on('request', interceptedRequest => {
-  //   if (interceptedRequest.url().includes('maps.googleapisos.com') || interceptedRequest.url().includes('fonts')) {
-  //     interceptedRequest.abort();
-  //   } else {
-  //     interceptedRequest.continue();
-  //   }
-  // });
   
   page.goto('https://app.plugitcloud.com/')
   // Click button that has visible label "Update"
@@ -69,21 +60,18 @@ export async function getStatus(page: Page): Promise<'Unavailable' | 'Available'
 }
 
 export async function startCharging(page: Page) {
-  await page.waitForSelector('eu-recent-charge-boxes', { visible: true, timeout: 50000 })
-  console.log('Clicking eu-recent-charge-boxes')
-  await page.click('eu-recent-charge-boxes')
-
-  await page.waitForSelector('eu-drawer-chargebox-list-item', { visible: true })
-  page.waitForTimeout(2000)
-
-  await page.$eval("div.chargeBoxListItem__action", el => (el as HTMLElement).click())
-  await page.waitForTimeout(500)
-  // await page.focus('input.enter-code__input')
-  // await page.keyboard.type(process.env.PLUGIT_CHARGE_BOX_NUMBER || 'ENV PLUGIT_CHARGE_BOX_NUMBER IS MISSING', {delay: 20})
-  // await page.waitForTimeout(3000)
+  await page.waitForSelector('eu-enter-code-button', { visible: true, timeout: 50000 })
+  await page.click('eu-enter-code-button')
+  await page.waitForSelector('input.enter-code__input', { visible: true })
+  await page.focus('input.enter-code__input')
+  console.log('Typing code')
+  await page.keyboard.type(process.env.PLUGIT_CHARGE_BOX_NUMBER || 'ENV PLUGIT_CHARGE_BOX_NUMBER IS MISSING', {delay: 20})
+  await page.waitForTimeout(1000)
+  console.log('Clicking accept')
   await page.waitForSelector('button.--accept', { visible: true }) as unknown as HTMLElement
   await page.click('button.--accept')
   await page.waitForTimeout(2000)
+  console.log('checking status again')
   const status = await getStatus(page)
   if (status === 'Charging') {
     return true
