@@ -14,7 +14,8 @@ const serverlessConfiguration: AWS = {
     name: 'aws',
     region: 'eu-west-1',
     runtime: 'nodejs16.x',
-    memorySize: 1600,
+    memorySize: 3200,
+    timeout: 250,
     stage: 'dev',
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
