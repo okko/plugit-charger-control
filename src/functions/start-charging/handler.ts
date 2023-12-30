@@ -45,8 +45,7 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
   } else {    
     await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
-  // await page.close()
-  // await browser.close()
+  await browser.close()
   return formatJSONResponse({
     message: 'Done',
     event,
