@@ -25,7 +25,7 @@ API_KEY=webapikey PLUGIT_CHARGE_POINT_ID=123123 PLUGIT_CHARGE_BOX_ID=123123 PLUG
 # Features
 - Runs every night at 21:00 Finnish time
 - Provides a URL for additional executions, requires `?apiKey=webapikey`
-- Plugit values you need to reverse engineer from plugitcloud.com
+- PLUGIT_* env values you need to reverse engineer from app.plugitcloud.com
 - Voicemonkey values you need to get by registering at voicemonkey.io
 
 ## This application is in no way authorized or maintained by Plugit.
