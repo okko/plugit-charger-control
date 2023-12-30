@@ -20,20 +20,33 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
     // Assume it's the developer running the Lambda by hand locally or in the AWS Console
   }
 
-  const plugitAccessToken = await plugitClient.login()
-  if (!plugitAccessToken) {
-    console.log('Unable to get Plugit access token')
-    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get Plugit access token'}), }
+  const {page, browser } = await plugitClient.login()
+  if (!page) {
+    console.log('Unable to get page after Plugit login')
+    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get page after Plugit login'}), }
   }
-  const plugitStatus = await plugitClient.getStatus(plugitAccessToken)
+  const plugitStatus = await plugitClient.getStatus(page)
   if (plugitStatus === 'Available') {
     await alexaMonkey.announce('Not charging the car, the cable is not connected')
   } else if (plugitStatus === 'Preparing') {
-    await plugitClient.startCharging(plugitAccessToken)
-    await alexaMonkey.announce('The car is now charging')
+    const startResult = await plugitClient.startCharging(page)
+    if (startResult) {
+      await alexaMonkey.announce('The car is now charging')
+    } else {
+      await alexaMonkey.announce('The car charging was not started, something went wrong')
+    }
+  } else if (plugitStatus === 'SuspendedEVSE') {
+    const startResult = await plugitClient.startCharging(page)
+    if (startResult) {
+      await alexaMonkey.announce('The charging was suspended, the car is now charging')
+    } else {
+      await alexaMonkey.announce('The charging was suspended and something went wrong when starting the charging')
+    }
   } else {    
-    await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEVSE' ? 'suspended by the charger' : plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
+    await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
+  // await page.close()
+  // await browser.close()
   return formatJSONResponse({
     message: 'Done',
     event,
