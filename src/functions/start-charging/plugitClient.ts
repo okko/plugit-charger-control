@@ -1,11 +1,8 @@
-import got from 'got'
 import chromium from '@sparticuz/chrome-aws-lambda'
+import { Page } from 'puppeteer-core'
 
-const startTransaction = 'https://app.plugitcloud.com/backend/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID + '/remote-start-transaction'
 const chargeboxInfo =    'https://app.plugitcloud.com/backend/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID
 
-// Take the /authorize URL and replace "response_type=code&" with "response_type=token" in it
-const plugitLogin = 'https://login.plugitcloud.com/authorize?response_type=token&client_id=7QgIcJZwbxHRLfY0wQk188mWAPWbzwEp&redirect_uri=https://app.plugitcloud.com/backend/login/auth0/callback&scope=email%20openid%20profile%20offline_access%20&audience=https://capi.plugitcloud.com&state=d32b07545e38d1f329da8d8a18d9fa9e&ui_locales=en&environment=plugit'
 export async function login() {
   const browser = await chromium.puppeteer.launch({
     args: chromium.args,
@@ -16,88 +13,96 @@ export async function login() {
   })
 
   const page = await browser.newPage()
-  page.goto(plugitLogin)
+
+  // await page.setRequestInterception(true);
+  // page.on('request', interceptedRequest => {
+  //   if (interceptedRequest.url().includes('maps.googleapisos.com') || interceptedRequest.url().includes('fonts')) {
+  //     interceptedRequest.abort();
+  //   } else {
+  //     interceptedRequest.continue();
+  //   }
+  // });
+  
+  page.goto('https://app.plugitcloud.com/')
+  // Click button that has visible label "Update"
+  await page.waitForSelector('button.--accept', { visible: true })
+  await page.click('button.--accept')
+  // Click button to Reject all cookies
+  await page.waitForSelector('button[aria-label="Reject All"]', { visible: true })
+  await page.click('button[aria-label="Reject All"]')
+
+  // Click Login button
+  await page.waitForSelector('button.loginButton', { visible: true })
+  await page.click('button.loginButton')
+
+  // These happen in the Auth0 login page
+  await page.waitForSelector('input[name="email"]', { visible: true })
   await page.waitForSelector('input[name="email"]', { visible: true })
   await page.focus('input[name="email"]')
   await page.keyboard.type(process.env.PLUGIT_USERNAME || '')
   await page.focus('input[name="password"]')
   await page.keyboard.type(process.env.PLUGIT_PASSWORD || '')
 
-  // Prevent https://app.plugitcloud.com/ from evaluating the return URL hash so that we can capture access_token from it
-  await page.setRequestInterception(true);
-  page.on('request', interceptedRequest => {
-    if (interceptedRequest.url().endsWith('.js'))
-      interceptedRequest.abort();
-    else
-      interceptedRequest.continue();
-    }
-  );
-
   await page.click('button[type="submit"][aria-label="Log in"]')
+
+  // Wait until we return back to https://app.plugitcloud.com/
   await page.waitForNavigation({waitUntil: 'networkidle2'})
 
-  // Bridge function to get data from the browser to us
-  const params = await page.evaluate(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    return {
-        accessToken: hashParams.get('access_token'),
-      };
-    })
-  await browser.close()
-  return params.accessToken
+  return {browser, page}
 }
 
-export async function getStatus(accessToken: string): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
-  console.log('Access token: ' + accessToken)
-  console.error(chargeboxInfo)
-  const result = await got(chargeboxInfo, {
-    headers: {
-        'authorization': 'Bearer ' + accessToken,
-        'accept': 'application/json, text/plain, */*',
-    },
-    hooks: {
-      beforeRequest: [function(options) {
-          console.log(options);
-      }]
-    },
-  })
+export async function getStatus(page: Page): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
+  const result = await page.evaluate(async (chargeboxInfo) => {
+    const inBrowserResult = await fetch(chargeboxInfo, {method: 'GET', credentials: 'include' }).then(res => res.json()).catch(err => {
+      return { statusCode: 'ERROR', error: err}
+    });
+    return inBrowserResult?.statusCode ? inBrowserResult : { statusCode: 200, body: inBrowserResult }
+  }, chargeboxInfo)
   const statusCode = result.statusCode
   if (statusCode != 200) {
-    console.error('Error in plugitClient:isCableconnected, statusCode != 200')
+    console.error('Error in plugitClient:getStatus, statusCode != 200')
     console.error(result)
     return 'ERROR'
   }
-  const body = JSON.parse(result.body)
-  console.log(body)
-  return body.chargeBoxes?.[0]?.status
+  const body = result.body
+  return body.status
 }
 
-export async function startCharging(accessToken: string) {
-  const headers = {
-    'authorization': 'Bearer ' + accessToken,
-    'accept': 'application/json, text/plain, */*',
-  }
-  const result = await got.post(startTransaction, {
-    headers,
-    json: {},
-    hooks: {
-      beforeRequest: [function(options) {
-          console.log(options);
-      }]
-    },
-  })
-  const statusCode = result.statusCode
-  if (statusCode != 200) {
-    console.error('Error in plugitClient:startCharging, statusCode != 200')
-    console.error(result)
-    return false
-  }
-  const body = JSON.parse(result.body)
-  console.log('plugitClient:startCharging request got 200')
-  console.log(body)
-  if (body.status === 'Accepted') {
+export async function startCharging(page: Page) {
+  await page.waitForSelector('eu-recent-charge-boxes', { visible: true, timeout: 50000 })
+  console.log('Clicking eu-recent-charge-boxes')
+  await page.click('eu-recent-charge-boxes')
+
+  await page.waitForSelector('eu-drawer-chargebox-list-item', { visible: true })
+  page.waitForTimeout(2000)
+
+  await page.$eval("div.chargeBoxListItem__action", el => (el as HTMLElement).click())
+  await page.waitForTimeout(500)
+  // await page.focus('input.enter-code__input')
+  // await page.keyboard.type(process.env.PLUGIT_CHARGE_BOX_NUMBER || 'ENV PLUGIT_CHARGE_BOX_NUMBER IS MISSING', {delay: 20})
+  // await page.waitForTimeout(3000)
+  await page.waitForSelector('button.--accept', { visible: true }) as unknown as HTMLElement
+  await page.click('button.--accept')
+  await page.waitForTimeout(2000)
+  const status = await getStatus(page)
+  if (status === 'Charging') {
     return true
   } else {
     return false
   }
+  // // const startButton = startButtonCandidate?.innerText?.includes('Aloita lataus') ? startButtonCandidate : null
+  // if (startButton) {
+  //   if (startButton.className.includes('--disabled')) {
+  //     console.log('plugitClient:startCharging button is disabled')
+  //     console.log(startButton)
+  //     return false
+  //   } else {
+  //     startButton.click()
+  //     console.log('plugitClient:startCharging request made')
+  //     return true
+  //   }
+  // } else {
+  //   console.log('plugitClient:startCharging button not found')
+  //   return false
+  // }
 }
