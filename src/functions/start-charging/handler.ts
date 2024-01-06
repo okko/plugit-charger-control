@@ -36,12 +36,13 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
       await alexaMonkey.announce('The car charging was not started, something went wrong')
     }
   } else if (plugitStatus === 'SuspendedEVSE') {
-    const startResult = await plugitClient.startCharging(page)
-    if (startResult) {
-      await alexaMonkey.announce('The charging was suspended, the car is now charging')
-    } else {
-      await alexaMonkey.announce('The charging was suspended and something went wrong when starting the charging')
-    }
+    await alexaMonkey.announce('The car charger status is suspended by the charger')
+    // const startResult = await plugitClient.startCharging(page)
+    // if (startResult) {
+    //   await alexaMonkey.announce('The charging was suspended, the car is now charging')
+    // } else {
+    //   await alexaMonkey.announce('The charging was suspended and something went wrong when starting the charging')
+    // }
   } else {    
     await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
