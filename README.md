@@ -1,6 +1,6 @@
 # Plugit Charger Control
 
-Automatically start charging at 21:00 if the charging cable is connected to the car.
+Automatically start charging at 21:03 if the charging cable is connected to the car.
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/C_RdafZ5Cr8/0.jpg)](https://www.youtube.com/watch?v=C_RdafZ5Cr8)
 
