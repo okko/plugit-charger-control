@@ -1,13 +1,13 @@
 # Plugit App API Endpoints
 
-## Base URLs (by environment)
+## Base URLs
 
-| Service | Production | Staging | Dev |
-|---------|-----------|---------|-----|
-| **App Gateway** | `https://app-gw.plugitcloud.com` | `https://app-gw.staging.plugitcloud.com` | `https://app-gw.dev-plugitcloud.com` |
-| **Auth (Ory)** | `https://ory.plugitcloud.com` | `https://ory.staging.plugitcloud.com` | `https://ory.dev-plugitcloud.com` |
-| **WebSocket** | `https://socket.plugitcloud.com/` | `https://socket.staging.plugitcloud.com/` | `https://socket.dev-plugitcloud.com/` |
-| **User Service** | `https://user-service.plugitcloud.com` | `https://user-service.staging.plugitcloud.com` | `https://user-service.dev-plugitcloud.com` |
+| Service | URL |
+|---------|-----|
+| **App Gateway** | `https://app-gw.plugitcloud.com` |
+| **Auth (Ory)** | `https://ory.plugitcloud.com` |
+| **WebSocket** | `https://socket.plugitcloud.com/` |
+| **User Service** | `https://user-service.plugitcloud.com` |
 
 ## Authentication (Ory Kratos)
 
