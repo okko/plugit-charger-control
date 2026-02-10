@@ -11,7 +11,7 @@ const serverlessConfiguration: AWS = {
         Type: 'AWS::Scheduler::Schedule',
         Properties: {
           Name: 'plugit-start-charging-daily',
-          ScheduleExpression: 'cron(0 21 * * ? *)',
+          ScheduleExpression: 'cron(3 21 * * ? *)',
           ScheduleExpressionTimezone: 'Europe/Helsinki',
           FlexibleTimeWindow: { Mode: 'OFF' },
           Target: {
