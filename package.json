@@ -15,7 +15,7 @@
     "@serverless/typescript": "^4.30.0",
     "@types/aws-lambda": "^8.10.160",
     "@types/node": "^22.15.3",
-    "esbuild": "^0.25.3",
+    "esbuild": "^0.27.3",
     "serverless": "^4.31.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
