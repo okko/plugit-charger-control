@@ -4,9 +4,6 @@ import startCharging from '@functions/start-charging'
 
 const serverlessConfiguration: AWS = {
   service: 'plugit-charger-control',
-  frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-local-schedule'],
-  // plugins: ['serverless-esbuild'],
   resources: {
     Description: 'Plugit Charger Control',
   },
@@ -38,25 +35,11 @@ const serverlessConfiguration: AWS = {
   package: {
     individually: true,
   },
-  custom: {
+  build: {
     esbuild: {
-      bundle: true,
-      minify: false,
+      external: ['aws-sdk', 'playwright-core', 'chromium-bidi'],
       sourcemap: true,
-      exclude: ['aws-sdk', '@sparticuz/chrome-aws-lambda'],
-      target: 'node16',
-      define: { 'require.resolve': undefined },
-      platform: 'node',
-      concurrency: 10,
-      packager: 'yarn',
-    },
-  },
-  layers: {
-    chrome: {
-      package: {
-        artifact: 'chrome_aws_lambda.zip',
-      },
-    },
+    }
   },
 }
 
