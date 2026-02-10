@@ -3,7 +3,9 @@ import * as plugitClient from './plugitClient'
 import * as alexaMonkey from './alexaMonkey'
 
 const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
-  // Use rawPath to detect it's a HTTP request
+  // rawPath is present on Lambda Function URL requests — require API key for those.
+  // Other invocations (EventBridge Scheduler, AWS Console, local dev) skip this check
+  // and are trusted since only authorized IAM principals can invoke the function directly.
   if (event.rawPath) {
     if (event.queryStringParameters?.apiKey !== process.env.API_KEY) {
       console.log('Invalid API key')
@@ -13,8 +15,6 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
     if (event.rawPath !== '/') {
       return { statusCode: 404, body: JSON.stringify({error: 'Not found'}) }
     }
-  } else {
-    // Assume it's the developer running the Lambda by hand locally or in the AWS Console
   }
 
   const sessionToken = await plugitClient.login()
