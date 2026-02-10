@@ -5,7 +5,7 @@ Automatically start charging at 21:00 if the charging cable is connected to the 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/C_RdafZ5Cr8/0.jpg)](https://www.youtube.com/watch?v=C_RdafZ5Cr8)
 
 
-![Flow diagram](doc/plugit-charger-control.png)
+[Flow diagram](doc/plugit-charger-control.drawio.html)
 
 # How it works
 
