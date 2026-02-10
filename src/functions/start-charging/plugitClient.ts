@@ -1,79 +1,103 @@
-import * as playwright from 'playwright-aws-lambda';
-import { Page } from 'playwright-core';
+const ORY_BASE = 'https://ory.plugitcloud.com';
+const GW_BASE = 'https://app-gw.plugitcloud.com';
 
-const chargeboxInfo =    'https://app.plugitcloud.com/backend/charge-points/' + process.env.PLUGIT_CHARGE_POINT_ID + '/charge-boxes/' + process.env.PLUGIT_CHARGE_BOX_ID
+export async function login(): Promise<string> {
+  // Step 1: Initialize Ory Kratos login flow
+  const flowRes = await fetch(`${ORY_BASE}/self-service/login/api`);
+  if (!flowRes.ok) {
+    throw new Error(`Failed to init login flow: ${flowRes.status} ${await flowRes.text()}`);
+  }
+  const flow = await flowRes.json();
+  const flowId = flow.id;
 
-export async function login() {
-  const browser = await playwright.launchChromium({
-    headless: false,
-    ignoreDefaultArgs: ['--enable-automation'],
-    env: process.env as { [key: string]: string },
+  // Step 2: Submit credentials to Ory
+  const loginRes = await fetch(`${ORY_BASE}/self-service/login?flow=${flowId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'password',
+      identifier: process.env.PLUGIT_USERNAME,
+      password: process.env.PLUGIT_PASSWORD,
+    }),
+  });
+  if (!loginRes.ok) {
+    throw new Error(`Login failed: ${loginRes.status} ${await loginRes.text()}`);
+  }
+  const loginData = await loginRes.json();
+  const sessionToken = loginData.session_token;
+  if (!sessionToken) {
+    throw new Error('No session_token in login response');
+  }
+
+  // Step 3: Register session with Plugit backend to get API access token
+  const regRes = await fetch(`${GW_BASE}/users/register-session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: sessionToken }),
+  });
+  if (!regRes.ok) {
+    throw new Error(`Register session failed: ${regRes.status} ${await regRes.text()}`);
+  }
+  const regData = await regRes.json();
+  const accessToken = regData.accessToken;
+  if (!accessToken) {
+    throw new Error('No accessToken in register-session response');
+  }
+
+  return accessToken;
+}
+
+export async function getStatus(
+  accessToken: string,
+): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
+  const chargePointId = process.env.PLUGIT_CHARGE_POINT_ID;
+  const chargeBoxId = process.env.PLUGIT_CHARGE_BOX_ID;
+
+  const res = await fetch(`${GW_BASE}/charge-points/user-charge-points`, {
+    headers: { Authorization: accessToken },
+  });
+  if (!res.ok) {
+    console.error(`getStatus failed: ${res.status} ${await res.text()}`);
+    return 'ERROR';
+  }
+  const chargePoints = await res.json();
+
+  // Find the matching charge box in the nested structure
+  for (const cp of chargePoints) {
+    if (cp._id !== chargePointId) continue;
+    for (const group of cp.chargeBoxGroups) {
+      for (const box of group.chargeBoxes) {
+        if (box._id === chargeBoxId) {
+          return box.status;
+        }
+      }
+    }
+  }
+
+  console.error(`Charge box ${chargeBoxId} not found in charge point ${chargePointId}`);
+  return 'ERROR';
+}
+
+export async function startCharging(accessToken: string): Promise<boolean> {
+  const chargePointId = process.env.PLUGIT_CHARGE_POINT_ID;
+  const chargeBoxId = process.env.PLUGIT_CHARGE_BOX_ID;
+
+  const res = await fetch(`${GW_BASE}/remote-start-transaction`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: accessToken,
+    },
+    body: JSON.stringify({
+      chargePointId,
+      chargeBoxId,
+    }),
   });
 
-  const page = await browser.newPage()
-  
-  page.goto('https://app.plugitcloud.com/')
-  // Click button that has visible label "Update"
-  await page.waitForSelector('button.--accept', { state: 'visible' })
-  await page.click('button.--accept')
-  // Click button to Reject all cookies
-  await page.waitForSelector('button[aria-label="Reject All"]', { state: 'visible' })
-  await page.click('button[aria-label="Reject All"]')
-
-  // Click Login button
-  await page.waitForSelector('button.loginButton', { state: 'visible' })
-  await page.click('button.loginButton')
-
-  // These happen in the Auth0 login page
-  await page.waitForSelector('input[name="email"]', { state: 'visible' })
-  await page.waitForSelector('input[name="email"]', { state: 'visible' })
-  await page.focus('input[name="email"]')
-  await page.keyboard.type(process.env.PLUGIT_USERNAME || '')
-  await page.focus('input[name="password"]')
-  await page.keyboard.type(process.env.PLUGIT_PASSWORD || '')
-
-  await page.click('button[type="submit"][aria-label="Log in"]')
-
-  // Wait until we return back to https://app.plugitcloud.com/
-  await page.waitForNavigation({waitUntil: 'networkidle'})
-
-  return {browser, page}
-}
-
-export async function getStatus(page: Page): Promise<'Unavailable' | 'Available' | 'Preparing' | 'Charging' | 'SuspendedEV' | 'SuspendedEVSE' | 'Finishing' | 'ERROR'> {
-  const result = await page.evaluate(async (chargeboxInfo) => {
-    const inBrowserResult = await fetch(chargeboxInfo, {method: 'GET', credentials: 'include' }).then(res => res.json()).catch(err => {
-      return { statusCode: 'ERROR', error: err}
-    });
-    return inBrowserResult?.statusCode ? inBrowserResult : { statusCode: 200, body: inBrowserResult }
-  }, chargeboxInfo)
-  const statusCode = result.statusCode
-  if (statusCode != 200) {
-    console.error('Error in plugitClient:getStatus, statusCode != 200')
-    console.error(result)
-    return 'ERROR'
+  if (!res.ok) {
+    console.error(`startCharging failed: ${res.status} ${await res.text()}`);
+    return false;
   }
-  const body = result.body
-  return body.status
-}
 
-export async function startCharging(page: Page) {
-  await page.waitForSelector('eu-enter-code-button', { state: 'visible', timeout: 50000 })
-  await page.click('eu-enter-code-button')
-  await page.waitForSelector('input.enter-code__input', { state: 'visible' })
-  await page.focus('input.enter-code__input')
-  console.log('Typing code')
-  await page.keyboard.type(process.env.PLUGIT_CHARGE_BOX_NUMBER || 'ENV PLUGIT_CHARGE_BOX_NUMBER IS MISSING', {delay: 20})
-  await page.waitForTimeout(1000)
-  console.log('Clicking accept')
-  await page.waitForSelector('button.--accept', { state: 'visible' }) as unknown as HTMLElement
-  await page.click('button.--accept')
-  await page.waitForTimeout(2000)
-  console.log('checking status again')
-  const status = await getStatus(page)
-  if (status === 'Charging') {
-    return true
-  } else {
-    return false
-  }
+  return true;
 }

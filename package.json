@@ -5,8 +5,7 @@
   "main": "serverless.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run-local": "sls invoke local --function startCharging --path ./src/functions/start-charging/mock.json",
-    "rebuild-chrome": "mkdir sparticuz-temp; cd sparticuz-temp; git clone --depth=1 https://github.com/sparticuz/chrome-aws-lambda.git; cd chrome-aws-lambda; make chrome_aws_lambda.zip; mv chrome_aws_lambda.zip ../../../; cd ../../../; rm -rf sparticuz-temp; echo 'Done.'"
+    "run-local": "sls invoke local --function startCharging --path ./src/functions/start-charging/mock.json"
   },
   "engines": {
     "node": ">=14.15.0"
@@ -14,11 +13,7 @@
   "dependencies": {
     "@middy/core": "^6.1.6",
     "@middy/http-json-body-parser": "^6.1.6",
-    "got": "11",
-    "playwright": "^1.52.0",
-    "playwright-aws-lambda": "^0.11.0",
-    "playwright-core": "^1.52.0",
-    "tsx": "^4.19.3"
+    "got": "11"
   },
   "devDependencies": {
     "@serverless/typescript": "^4.14.1",

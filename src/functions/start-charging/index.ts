@@ -6,7 +6,7 @@ export default {
   // layers: [{
   //   "Ref": "ChromeLambdaLayer",
   // }],
-  timeout: 300,
+  timeout: 30,
   events: [
     {
       schedule: {

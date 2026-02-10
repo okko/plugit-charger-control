@@ -12,24 +12,24 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
       console.log('Invalid API key')
       console.log(event)
       return { statusCode: 403, message: JSON.stringify({error: 'Forbidden'}), }
-    }  
+    }
     if (event.rawPath !== '/') {
-      return { statusCode: 404, message: JSON.stringify({error: 'Not found'}), }  
+      return { statusCode: 404, message: JSON.stringify({error: 'Not found'}), }
     }
   } else {
     // Assume it's the developer running the Lambda by hand locally or in the AWS Console
   }
 
-  const {page, browser } = await plugitClient.login()
-  if (!page) {
-    console.log('Unable to get page after Plugit login')
-    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get page after Plugit login'}), }
+  const sessionToken = await plugitClient.login()
+  if (!sessionToken) {
+    console.log('Unable to get session token after Plugit login')
+    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get session token after Plugit login'}), }
   }
-  const plugitStatus = await plugitClient.getStatus(page)
+  const plugitStatus = await plugitClient.getStatus(sessionToken)
   if (plugitStatus === 'Available') {
     await alexaMonkey.announce('Not charging the car, the cable is not connected')
   } else if (plugitStatus === 'Preparing') {
-    const startResult = await plugitClient.startCharging(page)
+    const startResult = await plugitClient.startCharging(sessionToken)
     if (startResult) {
       await alexaMonkey.announce('The car is now charging')
     } else {
@@ -37,16 +37,9 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
     }
   } else if (plugitStatus === 'SuspendedEVSE') {
     await alexaMonkey.announce('The car charger status is suspended by the charger')
-    // const startResult = await plugitClient.startCharging(page)
-    // if (startResult) {
-    //   await alexaMonkey.announce('The charging was suspended, the car is now charging')
-    // } else {
-    //   await alexaMonkey.announce('The charging was suspended and something went wrong when starting the charging')
-    // }
-  } else {    
+  } else {
     await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
-  await browser.close()
   return formatJSONResponse({
     message: 'Done',
     event,

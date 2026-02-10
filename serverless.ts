@@ -10,9 +10,9 @@ const serverlessConfiguration: AWS = {
   provider: {
     name: 'aws',
     region: 'eu-west-1',
-    runtime: 'nodejs16.x',
-    memorySize: 3200,
-    timeout: 250,
+    runtime: 'nodejs20.x',
+    memorySize: 256,
+    timeout: 30,
     stage: 'dev',
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
@@ -26,7 +26,6 @@ const serverlessConfiguration: AWS = {
       VOICEMONKEY_MONKEY_ID: process.env.VOICEMONKEY_MONKEY_ID || '',
       PLUGIT_CHARGE_POINT_ID: process.env.PLUGIT_CHARGE_POINT_ID || '',
       PLUGIT_CHARGE_BOX_ID: process.env.PLUGIT_CHARGE_BOX_ID || '',
-      PLUGIT_CHARGE_BOX_NUMBER: process.env.PLUGIT_CHARGE_BOX_NUMBER || '',
       PLUGIT_USERNAME: process.env.PLUGIT_USERNAME || '',
       PLUGIT_PASSWORD: process.env.PLUGIT_PASSWORD || '',
     },
@@ -37,7 +36,7 @@ const serverlessConfiguration: AWS = {
   },
   build: {
     esbuild: {
-      external: ['aws-sdk', 'playwright-core', 'chromium-bidi'],
+      external: ['aws-sdk'],
       sourcemap: true,
     }
   },
