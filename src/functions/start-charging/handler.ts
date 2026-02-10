@@ -1,6 +1,3 @@
-import { formatJSONResponse } from '@libs/api-gateway'
-import { middyfy } from '@libs/lambda'
-
 import { APIGatewayProxyEventV2, Handler } from 'aws-lambda'
 import * as plugitClient from './plugitClient'
 import * as alexaMonkey from './alexaMonkey'
@@ -11,10 +8,10 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
     if (event.queryStringParameters?.apiKey !== process.env.API_KEY) {
       console.log('Invalid API key')
       console.log(event)
-      return { statusCode: 403, message: JSON.stringify({error: 'Forbidden'}), }
+      return { statusCode: 403, body: JSON.stringify({error: 'Forbidden'}) }
     }
     if (event.rawPath !== '/') {
-      return { statusCode: 404, message: JSON.stringify({error: 'Not found'}), }
+      return { statusCode: 404, body: JSON.stringify({error: 'Not found'}) }
     }
   } else {
     // Assume it's the developer running the Lambda by hand locally or in the AWS Console
@@ -23,7 +20,7 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
   const sessionToken = await plugitClient.login()
   if (!sessionToken) {
     console.log('Unable to get session token after Plugit login')
-    return { statusCode: 500, message: JSON.stringify({error: 'Unable to get session token after Plugit login'}), }
+    return { statusCode: 500, body: JSON.stringify({error: 'Unable to get session token after Plugit login'}) }
   }
   const plugitStatus = await plugitClient.getStatus(sessionToken)
   if (plugitStatus === 'Available') {
@@ -40,10 +37,7 @@ const handler: Handler<APIGatewayProxyEventV2> = async (event) => {
   } else {
     await alexaMonkey.announce('The car charger status is ' + (plugitStatus === 'SuspendedEV' ? 'suspended by the car' : plugitStatus))
   }
-  return formatJSONResponse({
-    message: 'Done',
-    event,
-  })
+  return { statusCode: 200, body: JSON.stringify({ message: 'Done', event }) }
 }
 
-export const main = middyfy(handler)
+export const main = handler
