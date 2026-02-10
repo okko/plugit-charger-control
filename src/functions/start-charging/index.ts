@@ -7,12 +7,4 @@ export default {
   //   "Ref": "ChromeLambdaLayer",
   // }],
   timeout: 30,
-  events: [
-    {
-      schedule: {
-        rate: ['cron(0 21 * * ? *)'],
-        timezone: 'Europe/Helsinki',
-      },
-    },
-  ],
 }

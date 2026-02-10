@@ -6,6 +6,51 @@ const serverlessConfiguration: AWS = {
   service: 'plugit-charger-control',
   resources: {
     Description: 'Plugit Charger Control',
+    Resources: {
+      StartChargingSchedule: {
+        Type: 'AWS::Scheduler::Schedule',
+        Properties: {
+          Name: 'plugit-start-charging-daily',
+          ScheduleExpression: 'cron(0 21 * * ? *)',
+          ScheduleExpressionTimezone: 'Europe/Helsinki',
+          FlexibleTimeWindow: { Mode: 'OFF' },
+          Target: {
+            Arn: { 'Fn::GetAtt': ['StartChargingLambdaFunction', 'Arn'] },
+            RoleArn: { 'Fn::GetAtt': ['StartChargingSchedulerRole', 'Arn'] },
+          },
+        },
+      },
+      StartChargingSchedulerRole: {
+        Type: 'AWS::IAM::Role',
+        Properties: {
+          AssumeRolePolicyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Effect: 'Allow',
+                Principal: { Service: 'scheduler.amazonaws.com' },
+                Action: 'sts:AssumeRole',
+              },
+            ],
+          },
+          Policies: [
+            {
+              PolicyName: 'InvokeStartChargingLambda',
+              PolicyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                  {
+                    Effect: 'Allow',
+                    Action: 'lambda:InvokeFunction',
+                    Resource: { 'Fn::GetAtt': ['StartChargingLambdaFunction', 'Arn'] },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    },
   },
   provider: {
     name: 'aws',
