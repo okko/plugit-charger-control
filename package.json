@@ -1,16 +1,10 @@
 {
   "name": "plugit-charger-control",
   "version": "1.0.0",
-  "description": "Serverless aws-nodejs-typescript template",
   "main": "serverless.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "run-local": "sls invoke local --function startCharging --path ./src/functions/start-charging/mock.json"
   },
-  "engines": {
-    "node": ">=14.15.0"
-  },
-  "dependencies": {},
   "devDependencies": {
     "@serverless/typescript": "^4.30.0",
     "@types/aws-lambda": "^8.10.160",
@@ -21,7 +15,6 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   },
-  "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
   "license": "MIT",
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

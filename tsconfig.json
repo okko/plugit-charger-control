@@ -11,26 +11,14 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
-    "noEmitOnError": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
     "incremental": true,
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "inlineSources": true,
     "strictPropertyInitialization": false,
   },
   "include": ["src/**/*.ts", "serverless.ts"],
   "exclude": [
-    "node_modules/**/*",
-    ".serverless/**/*",
-    ".webpack/**/*",
-    "_warmup/**/*",
-    ".vscode/**/*"
+    ".serverless/**/*"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"]

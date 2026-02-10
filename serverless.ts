@@ -58,9 +58,7 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs20.x',
     memorySize: 256,
     timeout: 30,
-    stage: 'dev',
     environment: {
-      AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
       /**
        * Api key to require
@@ -81,7 +79,6 @@ const serverlessConfiguration: AWS = {
   },
   build: {
     esbuild: {
-      external: ['aws-sdk'],
       sourcemap: true,
     }
   },
