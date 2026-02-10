@@ -169,18 +169,6 @@
   resolved "https://registry.yarnpkg.com/@middy/core/-/core-6.1.6.tgz#c7773881cbd1869dc50d7a0bce3718e37a5573a7"
   integrity sha512-YT7J0+9zgGIhKnC6lA5z1iE+EDHpmMda7H7gD59cu4inxRC2RTk+ensGFaJxXXMlAM08vGJn6Q5gH8KnV6YWoQ==
 
-"@middy/http-json-body-parser@^6.1.6":
-  version "6.1.6"
-  resolved "https://registry.yarnpkg.com/@middy/http-json-body-parser/-/http-json-body-parser-6.1.6.tgz#bc16aa9e1f31c01623950161ca045bb0576bef45"
-  integrity sha512-qE9Bm+rgnvrnoUrTiG3tE4cmHI/uYXw9E5b6kzZ9Ne8F54rOAh2lDQafRsjz2HF0jC35XcVBlTvbsVb6RJkpmA==
-  dependencies:
-    "@middy/util" "6.1.6"
-
-"@middy/util@6.1.6":
-  version "6.1.6"
-  resolved "https://registry.yarnpkg.com/@middy/util/-/util-6.1.6.tgz#acb6d3bb0f8cf585bfea10e880fe6f46cf586f47"
-  integrity sha512-NVsHayjEMNT4pd3kzQ0oG9RDuHlEeHVlF2pQsoyldSfFul5ldBtw5EVYeEMCyNLEbWMtbrX6JT4GqQ45AN1mNA==
-
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
