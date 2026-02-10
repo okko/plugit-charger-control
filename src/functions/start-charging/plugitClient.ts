@@ -16,7 +16,7 @@ export async function login(): Promise<string> {
   if (!flowRes.ok) {
     throw new Error(`Failed to init login flow: ${flowRes.status} ${await flowRes.text()}`);
   }
-  const { id: flowId } = await flowRes.json();
+  const { id: flowId } = await flowRes.json() as { id: string };
 
   // Step 2: Submit credentials to Ory
   const loginRes = await fetch(`${ORY_BASE}/self-service/login?flow=${flowId}`, {
@@ -31,7 +31,7 @@ export async function login(): Promise<string> {
   if (!loginRes.ok) {
     throw new Error(`Login failed: ${loginRes.status} ${await loginRes.text()}`);
   }
-  const { session_token: sessionToken } = await loginRes.json();
+  const { session_token: sessionToken } = await loginRes.json() as { session_token: string };
   if (!sessionToken) {
     throw new Error('No session_token in login response');
   }
@@ -45,7 +45,7 @@ export async function login(): Promise<string> {
   if (!regRes.ok) {
     throw new Error(`Register session failed: ${regRes.status} ${await regRes.text()}`);
   }
-  const { accessToken } = await regRes.json();
+  const { accessToken } = await regRes.json() as { accessToken: string };
   if (!accessToken) {
     throw new Error('No accessToken in register-session response');
   }
@@ -62,7 +62,10 @@ export async function getStatus(accessToken: string): Promise<ChargeBoxStatus> {
     console.error(`getStatus failed: ${res.status} ${await res.text()}`);
     return 'ERROR';
   }
-  const chargePoints = await res.json();
+  const chargePoints = await res.json() as Array<{
+    _id: string;
+    chargeBoxGroups: Array<{ chargeBoxes: Array<{ _id: string; status: ChargeBoxStatus }> }>;
+  }>;
 
   for (const cp of chargePoints) {
     if (cp._id !== chargePointId) continue;
