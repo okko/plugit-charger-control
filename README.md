@@ -25,6 +25,7 @@ Create a `.env` file with the following variables:
 API_KEY=your-api-key
 PLUGIT_CHARGE_POINT_ID=your-charge-point-id
 PLUGIT_CHARGE_BOX_ID=your-charge-box-id
+PLUGIT_CHARGE_BOX_GROUP_ID=your-charge-box-group-id
 PLUGIT_USERNAME=your-plugit-email
 PLUGIT_PASSWORD=your-plugit-password
 VOICEMONKEY_ACCESS_TOKEN=your-voicemonkey-access-token
@@ -35,7 +36,7 @@ VOICEMONKEY_MONKEY_ID=your-monkey-name
 # Deployment
 
 ```
-source .env && AWS_PROFILE=default yarn sls deploy
+set -a && source .env && set +a && yarn sls deploy
 ```
 
 # Local test run
