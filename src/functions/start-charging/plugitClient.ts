@@ -86,6 +86,7 @@ export async function startCharging(accessToken: string): Promise<boolean> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       chargePointId: process.env.PLUGIT_CHARGE_POINT_ID,
+      chargeBoxGroupId: process.env.PLUGIT_CHARGE_BOX_GROUP_ID,
       chargeBoxId: process.env.PLUGIT_CHARGE_BOX_ID,
     }),
   });

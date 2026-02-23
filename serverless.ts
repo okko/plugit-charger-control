@@ -69,6 +69,7 @@ const serverlessConfiguration: AWS = {
       VOICEMONKEY_MONKEY_ID: process.env.VOICEMONKEY_MONKEY_ID || '',
       PLUGIT_CHARGE_POINT_ID: process.env.PLUGIT_CHARGE_POINT_ID || '',
       PLUGIT_CHARGE_BOX_ID: process.env.PLUGIT_CHARGE_BOX_ID || '',
+      PLUGIT_CHARGE_BOX_GROUP_ID: process.env.PLUGIT_CHARGE_BOX_GROUP_ID || '',
       PLUGIT_USERNAME: process.env.PLUGIT_USERNAME || '',
       PLUGIT_PASSWORD: process.env.PLUGIT_PASSWORD || '',
     },
